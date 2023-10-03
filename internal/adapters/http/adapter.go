@@ -21,8 +21,11 @@ type Adapter struct {
 	auth   Auth
 }
 
-func New(logger Logger) *Adapter {
-	return &Adapter{}
+func New(logger Logger, auth Auth) *Adapter {
+	return &Adapter{
+		logger: logger,
+		auth:   auth,
+	}
 }
 
 func (a *Adapter) Register(rw http.ResponseWriter, r *http.Request) {

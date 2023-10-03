@@ -10,6 +10,7 @@ import (
 
 	//"github.com/ilya-rusyanov/gophermart/internal/adapters/db"
 	ht "github.com/ilya-rusyanov/gophermart/internal/adapters/http"
+	"github.com/ilya-rusyanov/gophermart/internal/usecases"
 
 	"github.com/go-chi/chi"
 )
@@ -25,8 +26,8 @@ func main() {
 	}
 
 	//db := db.New(logger, config.DSN)
-	//reg := usecases.NewReg( /*&db*/ )
-	httpAdapter := ht.New(logger /*reg*/)
+	authUsecase := usecases.NewAuth( /*&db*/ )
+	httpAdapter := ht.New(logger, authUsecase)
 
 	r := chi.NewRouter()
 
