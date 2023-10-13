@@ -30,10 +30,12 @@ func main() {
 
 	//db := db.New(logger, config.DSN)
 
+	errorHandler := handlers.NewDefaultErrorHandler(logger)
+
 	r := chi.NewRouter()
 
 	r.Route("/api/user", func(r chi.Router) {
-		r.Post("/register", handlers.NewRegister().ServeHTTP)
+		r.Post("/register", handlers.NewRegister(errorHandler).ServeHTTP)
 	})
 
 	httpServer := httpserver.New(config.ListenAddr, r)
