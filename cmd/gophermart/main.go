@@ -7,12 +7,11 @@ import (
 	"os/signal"
 
 	"github.com/ilya-rusyanov/gophermart/internal/config"
+	"github.com/ilya-rusyanov/gophermart/internal/handlers"
 	"github.com/ilya-rusyanov/gophermart/internal/httpserver"
 	"github.com/ilya-rusyanov/gophermart/internal/logger"
 
 	//"github.com/ilya-rusyanov/gophermart/internal/adapters/db"
-	ht "github.com/ilya-rusyanov/gophermart/internal/adapters/http"
-	"github.com/ilya-rusyanov/gophermart/internal/usecases"
 
 	"github.com/go-chi/chi"
 )
@@ -30,13 +29,11 @@ func main() {
 	context := context.Background()
 
 	//db := db.New(logger, config.DSN)
-	authUsecase := usecases.NewAuth( /*&db*/ )
-	httpAdapter := ht.New(logger, authUsecase)
 
 	r := chi.NewRouter()
 
 	r.Route("/api/user", func(r chi.Router) {
-		r.Post("/register", httpAdapter.Register)
+		r.Post("/register", handlers.NewRegister().ServeHTTP)
 	})
 
 	httpServer := httpserver.New(config.ListenAddr, r)
