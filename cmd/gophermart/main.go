@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 	"os"
+	"os/signal"
 
 	"github.com/ilya-rusyanov/gophermart/internal/config"
+	"github.com/ilya-rusyanov/gophermart/internal/httpserver"
 	"github.com/ilya-rusyanov/gophermart/internal/logger"
 
 	//"github.com/ilya-rusyanov/gophermart/internal/adapters/db"
@@ -25,6 +27,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	context := context.Background()
+
 	//db := db.New(logger, config.DSN)
 	authUsecase := usecases.NewAuth( /*&db*/ )
 	httpAdapter := ht.New(logger, authUsecase)
@@ -35,5 +39,20 @@ func main() {
 		r.Post("/register", httpAdapter.Register)
 	})
 
-	http.ListenAndServe(config.ListenAddr, r)
+	httpServer := httpserver.New(config.ListenAddr, r)
+
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+
+	select {
+	case <-interrupt:
+		logger.Info("interrupt")
+	case err = <-httpServer.Error():
+		logger.Errorf("http server error: %q", err)
+	}
+
+	err = httpServer.Shutdown(context)
+	if err != nil {
+		logger.Error(err)
+	}
 }
