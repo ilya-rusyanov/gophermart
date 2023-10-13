@@ -25,5 +25,6 @@ func (reg *Register) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		reg.errHandler.Handle(rw,
 			fmt.Errorf("failed to parse credentials from JSON: %w", errParsing),
 		)
+		return
 	}
 }
