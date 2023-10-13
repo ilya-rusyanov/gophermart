@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,13 +9,19 @@ import (
 	"github.com/ilya-rusyanov/gophermart/internal/entities"
 )
 
-type Register struct {
-	errHandler ErrorHandler
+type RegisterUsecase interface {
+	Register(context.Context, entities.AuthCredentials) (entities.AuthToken, error)
 }
 
-func NewRegister(errHandler ErrorHandler) *Register {
+type Register struct {
+	errHandler ErrorHandler
+	usecase    RegisterUsecase
+}
+
+func NewRegister(usecase RegisterUsecase, errHandler ErrorHandler) *Register {
 	return &Register{
 		errHandler: errHandler,
+		usecase:    usecase,
 	}
 }
 
@@ -27,4 +34,11 @@ func (reg *Register) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
+	token, err := reg.usecase.Register(r.Context(), creds)
+	if err != nil {
+		reg.errHandler.Handle(rw, fmt.Errorf("usecase failure: %w", err))
+		return
+	}
+	processAuthToken(rw, token)
+	rw.WriteHeader(http.StatusOK)
 }
