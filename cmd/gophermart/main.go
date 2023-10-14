@@ -10,6 +10,7 @@ import (
 	"github.com/ilya-rusyanov/gophermart/internal/handlers"
 	"github.com/ilya-rusyanov/gophermart/internal/httpserver"
 	"github.com/ilya-rusyanov/gophermart/internal/logger"
+	"github.com/ilya-rusyanov/gophermart/internal/usecases"
 
 	//"github.com/ilya-rusyanov/gophermart/internal/adapters/db"
 
@@ -30,12 +31,18 @@ func main() {
 
 	//db := db.New(logger, config.DSN)
 
+	registerUsecase := usecases.NewRegister()
+
 	errorHandler := handlers.NewDefaultErrorHandler(logger)
 
 	r := chi.NewRouter()
 
 	r.Route("/api/user", func(r chi.Router) {
-		r.Post("/register", handlers.NewRegister(errorHandler).ServeHTTP)
+		r.Post("/register",
+			handlers.NewAuth(
+				registerUsecase,
+				errorHandler,
+			).ServeHTTP)
 	})
 
 	httpServer := httpserver.New(config.ListenAddr, r)

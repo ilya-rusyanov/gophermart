@@ -14,7 +14,8 @@ func NewRegister() *Register {
 	return &Register{}
 }
 
-func (a *Register) Register(context.Context, entities.AuthCredentials) (
+// register user
+func (a *Register) Auth(context.Context, entities.AuthCredentials) (
 	entities.AuthToken, error,
 ) {
 	return entities.AuthToken(""), errors.New("TODO")
