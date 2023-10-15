@@ -18,6 +18,9 @@ func MustInit(ctx context.Context, logger Logger, dsn string) *sql.DB {
 		panic(err)
 	}
 	err = migrate(ctx, db)
+	if err != nil {
+		panic(err)
+	}
 	return db
 }
 
