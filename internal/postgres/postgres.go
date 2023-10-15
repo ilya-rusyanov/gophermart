@@ -26,7 +26,7 @@ func MustInit(ctx context.Context, logger Logger, dsn string) *sql.DB {
 
 func migrate(ctx context.Context, db *sql.DB) error {
 	_, err := db.ExecContext(ctx,
-		`CREATE TABLE IF NOT EXITS users
+		`CREATE TABLE IF NOT EXISTS users
 (username text PRIMARY KEY, password text NOT NULL)`)
 	if err != nil {
 		return fmt.Errorf("failed to create users table: %w", err)
