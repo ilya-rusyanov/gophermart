@@ -6,7 +6,7 @@ import (
 )
 
 type Logger interface {
-	Info(...any)
+	Error(...any)
 }
 
 type DefaultErrorHandler struct {
@@ -26,4 +26,5 @@ func (h *DefaultErrorHandler) Handle(rw http.ResponseWriter, err error) {
 	default:
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	}
+	h.log.Error(err.Error())
 }
