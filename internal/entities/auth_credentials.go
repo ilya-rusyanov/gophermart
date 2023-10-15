@@ -1,6 +1,8 @@
 package entities
 
+type Login string
+
 type AuthCredentials struct {
-	Login    string `json:"login"`
+	Login    Login  `json:"login"`
 	Password string `json:"password"`
 }

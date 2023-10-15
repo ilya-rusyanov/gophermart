@@ -5,17 +5,21 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/ilya-rusyanov/gophermart/internal/config"
 	"github.com/ilya-rusyanov/gophermart/internal/handlers"
 	"github.com/ilya-rusyanov/gophermart/internal/httpserver"
 	"github.com/ilya-rusyanov/gophermart/internal/logger"
+	"github.com/ilya-rusyanov/gophermart/internal/postgres"
+	"github.com/ilya-rusyanov/gophermart/internal/storage"
 	"github.com/ilya-rusyanov/gophermart/internal/usecases"
-
-	//"github.com/ilya-rusyanov/gophermart/internal/adapters/db"
 
 	"github.com/go-chi/chi"
 )
+
+const tokenExpiration = time.Hour * 24 * 7
+const signingKey = "TODO"
 
 func main() {
 	config := config.New()
@@ -29,9 +33,14 @@ func main() {
 
 	context := context.Background()
 
-	//db := db.New(logger, config.DSN)
+	db := postgres.MustInit(context, logger, config.DSN)
+	defer db.Close()
 
-	registerUsecase := usecases.NewRegister()
+	userStorage := storage.NewUser(db)
+
+	registerUsecase := usecases.NewRegister(
+		logger, tokenExpiration, signingKey, userStorage,
+	)
 
 	errorHandler := handlers.NewDefaultErrorHandler(logger)
 
