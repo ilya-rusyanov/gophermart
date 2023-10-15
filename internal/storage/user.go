@@ -22,7 +22,7 @@ func NewUser(db *sql.DB) *User {
 func (u *User) FindUser(ctx context.Context, login entities.Login) error {
 	row := u.db.QueryRowContext(ctx,
 		"SELECT username FROM users WHERE username = $1", login)
-	var user int64
+	var user string
 	err := row.Scan(&user)
 	if err != nil {
 		if err == sql.ErrNoRows {
