@@ -41,6 +41,9 @@ func main() {
 	registerUsecase := usecases.NewRegister(
 		logger, tokenExpiration, signingKey, userStorage,
 	)
+	loginUsecase := usecases.NewLogin(
+		logger, tokenExpiration, signingKey, userStorage,
+	)
 
 	errorHandler := handlers.NewDefaultErrorHandler(logger)
 
@@ -50,6 +53,11 @@ func main() {
 		r.Post("/register",
 			handlers.NewAuth(
 				registerUsecase,
+				errorHandler,
+			).ServeHTTP)
+		r.Post("/login",
+			handlers.NewAuth(
+				loginUsecase,
 				errorHandler,
 			).ServeHTTP)
 	})

@@ -22,13 +22,19 @@ func NewDefaultErrorHandler(logger Logger) *DefaultErrorHandler {
 }
 
 func (h *DefaultErrorHandler) Handle(rw http.ResponseWriter, err error) {
+	var statusCode int
 	switch {
 	case errors.Is(err, errParsing):
-		http.Error(rw, err.Error(), http.StatusBadRequest)
+		statusCode = http.StatusBadRequest
 	case errors.Is(err, entities.ErrLoginConflict):
-		http.Error(rw, err.Error(), http.StatusConflict)
+		statusCode = http.StatusConflict
+	case errors.Is(err, entities.ErrLoginIncorrect):
+		statusCode = http.StatusUnauthorized
 	default:
-		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		statusCode = http.StatusInternalServerError
 	}
+
+	http.Error(rw, err.Error(), statusCode)
+
 	h.log.Error(err.Error())
 }

@@ -49,3 +49,19 @@ VALUES ($1, $2)`, creds.Login, creds.Password)
 	}
 	return nil
 }
+
+func (u *User) FindCredentials(ctx context.Context, creds entities.AuthCredentials) error {
+	row := u.db.QueryRowContext(ctx,
+		`SELECT username FROM users WHERE username = $1 AND password = $2`,
+		creds.Login, creds.Password)
+	var user string
+	err := row.Scan(&user)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return entities.ErrNotFound
+		}
+
+		return fmt.Errorf("SQL error: %w", err)
+	}
+	return nil
+}

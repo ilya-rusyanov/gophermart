@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/ilya-rusyanov/gophermart/internal/entities"
 )
 
@@ -56,33 +55,12 @@ func (r *Register) Auth(ctx context.Context, creds entities.AuthCredentials) (
 		return result, fmt.Errorf("failed to store credentials: %w", err)
 	}
 
-	result, err = r.buildAuthToken(r.expiration, creds.Login, r.key)
+	result, err = buildAuthToken(r.expiration, creds.Login, r.key)
 	if err != nil {
 		return result, fmt.Errorf("failed to build auth token: %w", err)
 	}
 
 	r.logger.Infof("user %q registered", creds.Login)
 
-	return result, nil
-}
-
-func (r *Register) buildAuthToken(
-	expiration time.Duration, userID entities.Login, key string,
-) (entities.AuthToken, error) {
-	var result entities.AuthToken
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entities.TokenClaims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(
-				time.Now().Add(expiration)),
-		},
-		UserID: userID,
-	})
-
-	tokenString, err := token.SignedString([]byte(key))
-	if err != nil {
-		return result, fmt.Errorf("failed to sign token: %w", err)
-	}
-	result = entities.AuthToken(tokenString)
 	return result, nil
 }
