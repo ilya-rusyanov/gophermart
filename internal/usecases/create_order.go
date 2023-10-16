@@ -39,11 +39,13 @@ func (o *CreateOrder) CreateOrder(
 	storageUser, err := tx.FindUserForOrder(ctx, req.ID)
 	switch {
 	case errors.Is(err, entities.ErrNotFound):
-		// all okay
+		// all okay, may proceed
 		break
 	case err == nil:
 		if storageUser == req.User {
 			return entities.ErrAlreadyUploaded
+		} else {
+			return entities.ErrAlreadyUploadedOtherUser
 		}
 	default:
 		return fmt.Errorf("unexpected storage error: %w", err)
