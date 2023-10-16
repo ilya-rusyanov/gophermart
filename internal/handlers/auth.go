@@ -29,7 +29,7 @@ func (a *Auth) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	var creds entities.AuthCredentials
 	err := json.NewDecoder(r.Body).Decode(&creds)
 	if err != nil {
-		a.errHandler.Handle(rw,
+		a.errHandler(rw,
 			fmt.Errorf("failed to parse credentials from JSON: %w",
 				errParsing),
 		)
@@ -37,7 +37,7 @@ func (a *Auth) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	token, err := a.usecase.Auth(r.Context(), creds)
 	if err != nil {
-		a.errHandler.Handle(rw, fmt.Errorf("usecase failure: %w", err))
+		a.errHandler(rw, fmt.Errorf("usecase failure: %w", err))
 		return
 	}
 	processAuthToken(rw, token)

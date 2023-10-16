@@ -49,7 +49,7 @@ func main() {
 		logger,
 	)
 
-	errorHandler := handlers.NewDefaultErrorHandler(logger)
+	errorHandler := handlers.NewDefaultErrorHandler(logger).Handle
 
 	r := chi.NewRouter()
 
@@ -74,7 +74,8 @@ func main() {
 			handlers.NewOrderCreation(
 				logger,
 				createOrderUsecase,
-				errorHandler).ServeHTTP)
+				errorHandler,
+			).ServeHTTP)
 	})
 
 	httpServer := httpserver.New(config.ListenAddr, r)

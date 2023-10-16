@@ -35,16 +35,16 @@ func (c *OrderCreation) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	buf := &strings.Builder{}
 	_, err := io.Copy(buf, r.Body)
 	if err != nil {
-		c.errorHandler.Handle(rw, fmt.Errorf("failed to read data from request body: %w", entities.ErrInvalidOrder))
+		c.errorHandler(rw, fmt.Errorf("failed to read data from request body: %w", entities.ErrInvalidOrder))
 		return
 	}
 	id, err := strconv.ParseInt(buf.String(), 10, 64)
 	if err != nil {
-		c.errorHandler.Handle(rw, fmt.Errorf("failed to parse order ID from body: %w", entities.ErrInvalidOrder))
+		c.errorHandler(rw, fmt.Errorf("failed to parse order ID from body: %w", entities.ErrInvalidOrder))
 		return
 	}
 	if !luhn.Valid(int(id)) {
-		c.errorHandler.Handle(rw, fmt.Errorf("failed to verify Luhn: %w", err))
+		c.errorHandler(rw, fmt.Errorf("failed to verify Luhn: %w", err))
 		return
 	}
 	createRequest := entities.CreateOrderRequest{
@@ -55,7 +55,7 @@ func (c *OrderCreation) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		createRequest.ID, createRequest.User)
 	err = c.usecase.CreateOrder(r.Context(), createRequest)
 	if err != nil {
-		c.errorHandler.Handle(rw, fmt.Errorf(
+		c.errorHandler(rw, fmt.Errorf(
 			"usecase order creation error: %w", err))
 		return
 	}

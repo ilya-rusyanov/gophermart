@@ -2,6 +2,4 @@ package handlers
 
 import "net/http"
 
-type ErrorHandler interface {
-	Handle(http.ResponseWriter, error)
-}
+type ErrorHandler func(http.ResponseWriter, error)

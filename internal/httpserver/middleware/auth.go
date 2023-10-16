@@ -12,9 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-type ErrorHandler interface {
-	Handle(http.ResponseWriter, error)
-}
+type ErrorHandler func(http.ResponseWriter, error)
 
 type Auth struct {
 	signingKey       string
@@ -40,7 +38,7 @@ func (m *Auth) Middleware(next http.Handler) http.Handler {
 		if m.applicable(r.URL) {
 			cookie, err := r.Cookie("access_token")
 			if err != nil {
-				m.errorHandler.Handle(rw,
+				m.errorHandler(rw,
 					fmt.Errorf(
 						"failed to read access token from cookie: %w",
 						entities.ErrUnauthorized))
@@ -48,7 +46,7 @@ func (m *Auth) Middleware(next http.Handler) http.Handler {
 			}
 			var login *entities.Login
 			if !m.valid(*cookie, &login) || login == nil {
-				m.errorHandler.Handle(rw,
+				m.errorHandler(rw,
 					fmt.Errorf(
 						"cookie error: %w",
 						entities.ErrUnauthorized))
