@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ilya-rusyanov/gophermart/internal/entities"
 
@@ -50,6 +51,7 @@ func (c *OrderCreation) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	createRequest := entities.CreateOrderRequest{
 		ID:   entities.OrderID(id),
 		User: getUser(r.Context()),
+		Time: time.Now(),
 	}
 	c.logger.Infof("request to create order id %d for user %q",
 		createRequest.ID, createRequest.User)
