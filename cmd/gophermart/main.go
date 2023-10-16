@@ -45,6 +45,9 @@ func main() {
 	loginUsecase := usecases.NewLogin(
 		logger, tokenExpiration, signingKey, userStorage,
 	)
+	createOrderUsecase := usecases.NewCreateOrder(
+		logger,
+	)
 
 	errorHandler := handlers.NewDefaultErrorHandler(logger)
 
@@ -67,6 +70,11 @@ func main() {
 				loginUsecase,
 				errorHandler,
 			).ServeHTTP)
+		r.Post("/orders",
+			handlers.NewOrderCreation(
+				logger,
+				createOrderUsecase,
+				errorHandler).ServeHTTP)
 	})
 
 	httpServer := httpserver.New(config.ListenAddr, r)

@@ -7,10 +7,6 @@ import (
 	"github.com/ilya-rusyanov/gophermart/internal/entities"
 )
 
-type Logger interface {
-	Error(...any)
-}
-
 type DefaultErrorHandler struct {
 	log Logger
 }
@@ -32,6 +28,8 @@ func (h *DefaultErrorHandler) Handle(rw http.ResponseWriter, err error) {
 		statusCode = http.StatusUnauthorized
 	case errors.Is(err, entities.ErrUnauthorized):
 		statusCode = http.StatusUnauthorized
+	case errors.Is(err, entities.ErrInvalidOrder):
+		statusCode = http.StatusBadRequest
 	default:
 		statusCode = http.StatusInternalServerError
 	}
