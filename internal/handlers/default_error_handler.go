@@ -30,6 +30,10 @@ func (h *DefaultErrorHandler) Handle(rw http.ResponseWriter, err error) {
 		statusCode = http.StatusUnauthorized
 	case errors.Is(err, entities.ErrInvalidOrder):
 		statusCode = http.StatusBadRequest
+	case errors.Is(err, entities.ErrAlreadyUploaded):
+		statusCode = http.StatusOK
+	case errors.Is(err, entities.ErrAlreadyUploadedOtherUser):
+		statusCode = http.StatusConflict
 	default:
 		statusCode = http.StatusInternalServerError
 	}

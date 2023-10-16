@@ -59,4 +59,5 @@ func (c *OrderCreation) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			"usecase order creation error: %w", err))
 		return
 	}
+	rw.WriteHeader(http.StatusAccepted)
 }
