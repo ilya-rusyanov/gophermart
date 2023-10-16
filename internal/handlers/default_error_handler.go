@@ -30,6 +30,8 @@ func (h *DefaultErrorHandler) Handle(rw http.ResponseWriter, err error) {
 		statusCode = http.StatusConflict
 	case errors.Is(err, entities.ErrLoginIncorrect):
 		statusCode = http.StatusUnauthorized
+	case errors.Is(err, entities.ErrUnauthorized):
+		statusCode = http.StatusUnauthorized
 	default:
 		statusCode = http.StatusInternalServerError
 	}

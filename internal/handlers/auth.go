@@ -43,3 +43,13 @@ func (a *Auth) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	processAuthToken(rw, token)
 	rw.WriteHeader(http.StatusOK)
 }
+
+func processAuthToken(rw http.ResponseWriter, token entities.AuthToken) {
+	c := http.Cookie{
+		Name:  "access_token",
+		Value: string(token),
+		Path:  "/",
+	}
+
+	http.SetCookie(rw, &c)
+}

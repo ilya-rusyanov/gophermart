@@ -10,6 +10,7 @@ import (
 	"github.com/ilya-rusyanov/gophermart/internal/config"
 	"github.com/ilya-rusyanov/gophermart/internal/handlers"
 	"github.com/ilya-rusyanov/gophermart/internal/httpserver"
+	"github.com/ilya-rusyanov/gophermart/internal/httpserver/middleware"
 	"github.com/ilya-rusyanov/gophermart/internal/logger"
 	"github.com/ilya-rusyanov/gophermart/internal/postgres"
 	"github.com/ilya-rusyanov/gophermart/internal/storage"
@@ -49,6 +50,12 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Use(middleware.NewAuth(
+		signingKey,
+		errorHandler,
+		"/api/user/register",
+		"/api/user/login",
+	).Middleware)
 	r.Route("/api/user", func(r chi.Router) {
 		r.Post("/register",
 			handlers.NewAuth(
