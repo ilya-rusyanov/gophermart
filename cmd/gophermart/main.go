@@ -38,6 +38,7 @@ func main() {
 	defer db.Close()
 
 	userStorage := storage.NewUser(db)
+	orderStorage := storage.NewOrder(db)
 
 	registerUsecase := usecases.NewRegister(
 		logger, tokenExpiration, signingKey, userStorage,
@@ -46,7 +47,7 @@ func main() {
 		logger, tokenExpiration, signingKey, userStorage,
 	)
 	createOrderUsecase := usecases.NewCreateOrder(
-		logger,
+		logger, orderStorage,
 	)
 
 	errorHandler := handlers.NewDefaultErrorHandler(logger).Handle

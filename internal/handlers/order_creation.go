@@ -48,7 +48,7 @@ func (c *OrderCreation) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	createRequest := entities.CreateOrderRequest{
-		ID:   id,
+		ID:   entities.OrderID(id),
 		User: getUser(r.Context()),
 	}
 	c.logger.Infof("request to create order id %d for user %q",

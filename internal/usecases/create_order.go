@@ -3,17 +3,21 @@ package usecases
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/ilya-rusyanov/gophermart/internal/entities"
+	"github.com/ilya-rusyanov/gophermart/internal/ports"
 )
 
 type CreateOrder struct {
-	logger Logger
+	logger  Logger
+	storage ports.CreateOrderTransactioner
 }
 
-func NewCreateOrder(logger Logger) *CreateOrder {
+func NewCreateOrder(logger Logger, storage ports.CreateOrderTransactioner) *CreateOrder {
 	return &CreateOrder{
-		logger: logger,
+		logger:  logger,
+		storage: storage,
 	}
 }
 
@@ -21,5 +25,40 @@ func (o *CreateOrder) CreateOrder(
 	ctx context.Context,
 	req entities.CreateOrderRequest,
 ) error {
-	return errors.New("TODO")
+	tx, err := o.storage.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to start storage transaction: %w", err)
+	}
+	defer func() {
+		err = tx.Rollback()
+		if err != nil {
+			o.logger.Errorf("transaction rollback error: %q", err.Error())
+		}
+	}()
+
+	storageUser, err := tx.FindUserForOrder(ctx, req.ID)
+	switch {
+	case errors.Is(err, entities.ErrNotFound):
+		// all okay
+		break
+	case err == nil:
+		if storageUser == req.User {
+			return entities.ErrAlreadyUploaded
+		}
+	default:
+		return fmt.Errorf("unexpected storage error: %w", err)
+	}
+
+	err = tx.CreateOrder(ctx, req)
+	if err != nil {
+		return fmt.Errorf("storage failed to create order: %w", err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("failed to commit create order transaction: %w", err)
+	}
+
+	// TODO enqueue to accrual
+
+	return nil
 }

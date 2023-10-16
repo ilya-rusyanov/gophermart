@@ -1,6 +1,6 @@
 package entities
 
 type CreateOrderRequest struct {
-	ID   int64
+	ID   OrderID
 	User Login
 }
