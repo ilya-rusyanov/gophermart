@@ -79,7 +79,7 @@ func main() {
 			).ServeHTTP)
 		r.Get("/orders",
 			handlers.NewListOrders(
-				ordersStorage,
+				orderStorage,
 				errorHandler,
 			).ServeHTTP)
 	})
