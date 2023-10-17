@@ -79,7 +79,7 @@ func (t *CreateOrderTransaction) CreateOrder(
 	_, err := t.tx.ExecContext(ctx,
 		`INSERT INTO orders (id, username, upload_time, state)
 VALUES ($1, $2, $3, $4)`,
-		req.ID, req.User, req.Time, "new")
+		req.ID, req.User, req.Time, entities.OrderStatusNew)
 	if err != nil {
 		t.logger.Debug("insert failure")
 		return fmt.Errorf("failed to insert order: %w", err)
