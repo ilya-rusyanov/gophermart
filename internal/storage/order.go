@@ -44,7 +44,35 @@ func (o *Order) ListOrders(
 ) (entities.OrderList, error) {
 	var result entities.OrderList
 
-	return result, errors.New("TODO")
+	rows, err := o.db.QueryContext(ctx,
+		`SELECT id, state, value, upload_time FROM orders
+WHERE username = $1`, request.Login)
+	if err != nil {
+		return result, fmt.Errorf(
+			"failed to select orders: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var order entities.Order
+		err := rows.Scan(
+			&order.ID, &order.Status, &order.Accrual, &order.UploadedAt,
+		)
+		if err != nil {
+			return result, fmt.Errorf(
+				"failed to scan single order: %w", err)
+		}
+
+		result = append(result, order)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return result, fmt.Errorf(
+			"failure to finalize orders request: %w", err)
+	}
+
+	return result, nil
 }
 
 func (t *CreateOrderTransaction) Commit() error {
