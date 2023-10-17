@@ -33,8 +33,11 @@ func migrate(ctx context.Context, db *sql.DB) error {
 	}
 
 	_, err = db.ExecContext(ctx,
-		`CREATE TYPE order_state AS ENUM (
-'new', 'registered', 'invalid', 'processing', 'processed')`)
+		`DO $$ BEGIN
+    CREATE TYPE order_state AS ENUM ('new', 'registered', 'invalid', 'processing', 'processed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;`)
 	if err != nil {
 		return fmt.Errorf("failed to create order state enumeration: %w", err)
 	}
