@@ -33,20 +33,20 @@ func NewAuth(key string, errorHandler ErrorHandler, excludeEndpoints ...string) 
 	}
 }
 
-func (m *Auth) Middleware(next http.Handler) http.Handler {
+func (a *Auth) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		if m.applicable(r.URL) {
+		if a.applicable(r.URL) {
 			cookie, err := r.Cookie("access_token")
 			if err != nil {
-				m.errorHandler(rw,
+				a.errorHandler(rw,
 					fmt.Errorf(
 						"failed to read access token from cookie: %w",
 						entities.ErrUnauthorized))
 				return
 			}
 			var login *entities.Login
-			if !m.valid(*cookie, &login) || login == nil {
-				m.errorHandler(rw,
+			if !a.valid(*cookie, &login) || login == nil {
+				a.errorHandler(rw,
 					fmt.Errorf(
 						"cookie error: %w",
 						entities.ErrUnauthorized))
