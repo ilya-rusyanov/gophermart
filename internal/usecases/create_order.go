@@ -30,10 +30,7 @@ func (o *CreateOrder) CreateOrder(
 		return fmt.Errorf("failed to start storage transaction: %w", err)
 	}
 	defer func() {
-		err = tx.Rollback()
-		if err != nil {
-			o.logger.Errorf("transaction rollback error: %q", err.Error())
-		}
+		_ = tx.Rollback()
 	}()
 
 	storageUser, err := tx.FindUserForOrder(ctx, req.ID)
