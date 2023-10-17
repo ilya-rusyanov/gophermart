@@ -39,6 +39,14 @@ func (o *Order) Begin(ctx context.Context) (ports.CreateOrderTransaction, error)
 	}, nil
 }
 
+func (o *Order) ListOrders(
+	ctx context.Context, request entities.ListOrdersRequest,
+) (entities.OrderList, error) {
+	var result entities.OrderList
+
+	return result, errors.New("TODO")
+}
+
 func (t *CreateOrderTransaction) Commit() error {
 	return t.tx.Commit()
 }

@@ -77,6 +77,11 @@ func main() {
 				createOrderUsecase,
 				errorHandler,
 			).ServeHTTP)
+		r.Get("/orders",
+			handlers.NewListOrders(
+				ordersStorage,
+				errorHandler,
+			).ServeHTTP)
 	})
 
 	httpServer := httpserver.New(config.ListenAddr, r)
