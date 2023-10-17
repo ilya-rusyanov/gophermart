@@ -34,7 +34,7 @@ func migrate(ctx context.Context, db *sql.DB) error {
 
 	_, err = db.ExecContext(ctx,
 		`DO $$ BEGIN
-    CREATE TYPE order_state AS ENUM ('new', 'registered', 'invalid', 'processing', 'processed');
+    CREATE TYPE order_state AS ENUM ('NEW', 'REGISTERED', 'INVALID', 'PROCESSING', 'PROCESSED');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;`)
