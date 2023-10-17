@@ -7,12 +7,12 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/ilya-rusyanov/gophermart/internal/adapters/httpserver"
+	"github.com/ilya-rusyanov/gophermart/internal/adapters/httpserver/middleware"
+	"github.com/ilya-rusyanov/gophermart/internal/adapters/postgres"
 	"github.com/ilya-rusyanov/gophermart/internal/config"
 	"github.com/ilya-rusyanov/gophermart/internal/handlers"
-	"github.com/ilya-rusyanov/gophermart/internal/httpserver"
-	"github.com/ilya-rusyanov/gophermart/internal/httpserver/middleware"
 	"github.com/ilya-rusyanov/gophermart/internal/logger"
-	"github.com/ilya-rusyanov/gophermart/internal/postgres"
 	"github.com/ilya-rusyanov/gophermart/internal/storage"
 	"github.com/ilya-rusyanov/gophermart/internal/usecases"
 
