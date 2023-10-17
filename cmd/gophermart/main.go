@@ -38,7 +38,7 @@ func main() {
 	defer db.Close()
 
 	userStorage := storage.NewUser(db)
-	orderStorage := storage.NewOrder(db)
+	orderStorage := storage.NewOrder(logger, db)
 
 	registerUsecase := usecases.NewRegister(
 		logger, tokenExpiration, signingKey, userStorage,
