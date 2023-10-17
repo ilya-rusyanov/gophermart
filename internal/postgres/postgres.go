@@ -44,7 +44,7 @@ END $$;`)
 
 	_, err = db.ExecContext(ctx,
 		`CREATE TABLE IF NOT EXISTS orders
-(id int PRIMARY KEY, username text NOT NULL, upload_time timestamptz NOT NULL,
+(id bigint PRIMARY KEY, username text NOT NULL, upload_time timestamptz NOT NULL,
 state order_state NOT NULL, value int)`)
 	if err != nil {
 		return fmt.Errorf("failed to create order table: %w", err)
