@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/ilya-rusyanov/gophermart/internal/entities"
 )
@@ -22,7 +23,32 @@ func (a *Accrual) GetUnfinishedOrdersStates(ctx context.Context) (
 	entities.UnfinishedOrders, error,
 ) {
 	var result entities.UnfinishedOrders
-	return result, errors.New("TODO")
+	rows, err := a.db.QueryContext(ctx,
+		`SELECT id, state FROM orders
+WHERE state != "INVALID" AND state != "PROCESSED"`)
+	if err != nil {
+		return result, fmt.Errorf("failed to select order states: %w", err)
+	}
+	defer rows.Close()
+
+	var (
+		id    entities.OrderID
+		state entities.OrderStatus
+	)
+	for rows.Next() {
+		err := rows.Scan(&id, &state)
+		if err != nil {
+			return result, fmt.Errorf("failed to scan order state: %w", err)
+		}
+		result[id] = state
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return result, fmt.Errorf("failed to finalize rows: %w", err)
+	}
+
+	return result, nil
 }
 
 func (a *Accrual) UpdateOrderState(
