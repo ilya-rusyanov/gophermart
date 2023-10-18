@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/ilya-rusyanov/gophermart/internal/adapters/accrual"
 	"github.com/ilya-rusyanov/gophermart/internal/adapters/httpserver"
 	"github.com/ilya-rusyanov/gophermart/internal/adapters/httpserver/middleware"
 	"github.com/ilya-rusyanov/gophermart/internal/adapters/postgres"
@@ -37,8 +38,11 @@ func main() {
 	db := postgres.MustInit(context, logger, config.DSN)
 	defer db.Close()
 
+	accrualAdapter := accrual.New(config.AccrualAddr)
+
 	userStorage := storage.NewUser(db)
 	orderStorage := storage.NewOrder(logger, db)
+	accrualStorage := storage.NewAccrual(db)
 
 	registerUsecase := usecases.NewRegister(
 		logger, tokenExpiration, signingKey, userStorage,
@@ -49,6 +53,10 @@ func main() {
 	createOrderUsecase := usecases.NewCreateOrder(
 		logger, orderStorage,
 	)
+	feedAccrual := usecases.NewFeedAccrual(accrualStorage, accrualAdapter)
+	accrualErrorsCh := feedAccrual.Run(context, 20*time.Second)
+	defer feedAccrual.Close()
+	go printErrors(logger, accrualErrorsCh)
 
 	errorHandler := handlers.NewDefaultErrorHandler(logger).Handle
 

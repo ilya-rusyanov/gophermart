@@ -36,6 +36,8 @@ func (l *Login) Auth(ctx context.Context, creds entities.AuthCredentials) (
 
 	l.logger.Infof("attempt to login user %q", creds.Login)
 
+	// TODO: salt and hash password
+
 	err := l.storage.FindCredentials(ctx, creds)
 	switch {
 	case errors.Is(err, entities.ErrNotFound):

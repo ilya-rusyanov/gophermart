@@ -50,6 +50,8 @@ func (r *Register) Auth(ctx context.Context, creds entities.AuthCredentials) (
 		return result, fmt.Errorf("unexpected storage error: %w", err)
 	}
 
+	// TODO: salt and hash password
+
 	err = r.storage.AddCredentials(ctx, creds)
 	if err != nil {
 		return result, fmt.Errorf("failed to store credentials: %w", err)
