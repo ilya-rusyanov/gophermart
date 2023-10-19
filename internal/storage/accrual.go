@@ -21,7 +21,8 @@ func NewAccrual(db *sql.DB) *Accrual {
 func (a *Accrual) GetUnfinishedOrdersStates(ctx context.Context) (
 	entities.UnfinishedOrders, error,
 ) {
-	var result entities.UnfinishedOrders
+	result := entities.NewUnfinishedOrders()
+
 	rows, err := a.db.QueryContext(ctx,
 		`SELECT id, state FROM orders
 WHERE state != "INVALID" AND state != "PROCESSED"`)
