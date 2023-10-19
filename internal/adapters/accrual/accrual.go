@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -46,7 +47,7 @@ var toEntityStatus = map[orderStatus]entities.OrderStatus{
 
 func New(logger Logger, addr string) *Adapter {
 	return &Adapter{
-		addr:   addr,
+		addr:   addr + "/api/orders/",
 		logger: logger,
 	}
 }
@@ -54,8 +55,16 @@ func New(logger Logger, addr string) *Adapter {
 func (a *Adapter) GetStateOfOrder(ctx context.Context, orderID entities.OrderID) (
 	status entities.OrderStatus, value float64, err error,
 ) {
-	a.logger.Infof("getting state of order %d...", orderID)
-	resp, err := http.Get(a.addr)
+	var path string
+
+	path, err = url.JoinPath(a.addr, strconv.FormatInt(int64(orderID), 10))
+	if err != nil {
+		err = fmt.Errorf("failed to construct url: %w", err)
+		return
+	}
+	a.logger.Infof("getting state of order %q", path)
+
+	resp, err := http.Get(path)
 	if err != nil {
 		err = fmt.Errorf("http request error: %w", err)
 		return
