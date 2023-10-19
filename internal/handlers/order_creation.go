@@ -45,7 +45,7 @@ func (c *OrderCreation) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !luhn.Valid(int(id)) {
-		c.errorHandler(rw, fmt.Errorf("failed to verify Luhn: %w", err))
+		c.errorHandler(rw, entities.ErrLuhnValidation)
 		return
 	}
 	createRequest := entities.CreateOrderRequest{

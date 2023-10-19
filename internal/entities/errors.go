@@ -13,6 +13,7 @@ var (
 	ErrInvalidOrder                = errors.New("invalid order ID")
 	ErrAlreadyUploaded             = errors.New("order already uploaded")
 	ErrAlreadyUploadedOtherUser    = errors.New("order was alredy uploaded by other user")
+	ErrLuhnValidation              = errors.New("failed to verify Luhn")
 	ErrAccrualOrderIsNotRegistered = errors.New("order is not registered in accrual")
 )
 

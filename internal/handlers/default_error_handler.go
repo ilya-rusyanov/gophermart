@@ -34,6 +34,8 @@ func (h *DefaultErrorHandler) Handle(rw http.ResponseWriter, err error) {
 		statusCode = http.StatusOK
 	case errors.Is(err, entities.ErrAlreadyUploadedOtherUser):
 		statusCode = http.StatusConflict
+	case errors.Is(err, entities.ErrLuhnValidation):
+		statusCode = http.StatusUnprocessableEntity
 	default:
 		statusCode = http.StatusInternalServerError
 	}
