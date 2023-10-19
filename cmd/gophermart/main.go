@@ -43,6 +43,7 @@ func main() {
 	userStorage := storage.NewUser(db)
 	orderStorage := storage.NewOrder(logger, db)
 	accrualStorage := storage.NewAccrual(db)
+	balanceStorage := storage.NewBalance(db)
 
 	registerUsecase := usecases.NewRegister(
 		logger, tokenExpiration, signingKey, userStorage,
@@ -90,6 +91,12 @@ func main() {
 			handlers.NewListOrders(
 				logger,
 				orderStorage,
+				errorHandler,
+			).ServeHTTP)
+		r.Get("/balance",
+			handlers.NewShowBalance(
+				logger,
+				balanceStorage,
 				errorHandler,
 			).ServeHTTP)
 	})
