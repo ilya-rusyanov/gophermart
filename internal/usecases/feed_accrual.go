@@ -84,7 +84,7 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 		switch {
 		case errors.Is(err, entities.ErrAccrualOrderIsNotRegistered):
 			return fmt.Errorf(
-				"order %d is not registered in accrual: %w", err)
+				"order %d is not registered in accrual: %w", order, err)
 		case errors.As(err, &delay):
 			f.ticker.Reset(delay.Period)
 			return nil
