@@ -55,7 +55,7 @@ func main() {
 	)
 	feedAccrual := usecases.NewFeedAccrual(
 		logger, accrualStorage, accrualAdapter)
-	accrualErrorsCh := feedAccrual.Run(context, 20*time.Second)
+	accrualErrorsCh := feedAccrual.Run(context, time.Second)
 	defer feedAccrual.Close()
 	go printErrors(logger, accrualErrorsCh)
 
