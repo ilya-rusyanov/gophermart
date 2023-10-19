@@ -25,7 +25,7 @@ func (a *Accrual) GetUnfinishedOrdersStates(ctx context.Context) (
 
 	rows, err := a.db.QueryContext(ctx,
 		`SELECT id, state FROM orders
-WHERE state != "INVALID" AND state != "PROCESSED"`)
+WHERE state != 'INVALID' AND state != 'PROCESSED'`)
 	if err != nil {
 		return result, fmt.Errorf("failed to select order states: %w", err)
 	}
