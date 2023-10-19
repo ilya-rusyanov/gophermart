@@ -13,12 +13,17 @@ type AccrualStorage interface {
 	GetUnfinishedOrdersStates(context.Context) (
 		entities.UnfinishedOrders, error)
 	UpdateOrderState(
-		context.Context, entities.OrderID, entities.OrderStatus) error
+		ctx context.Context,
+		orderID entities.OrderID,
+		status entities.OrderStatus,
+		accrual *float64,
+	) error
 }
 
 type AccrualService interface {
 	GetStateOfOrder(context.Context, entities.OrderID) (
-		entities.OrderStatus, error)
+		status entities.OrderStatus, value float64, err error,
+	)
 }
 
 type FeedAccrual struct {
@@ -74,7 +79,7 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 	}
 
 	for order, state := range unfinishedOrders {
-		nextState, err := f.service.GetStateOfOrder(ctx, order)
+		nextState, value, err := f.service.GetStateOfOrder(ctx, order)
 		var delay *entities.AccrualTooManyRequestsError
 		switch {
 		case errors.Is(err, entities.ErrAccrualOrderIsNotRegistered):
@@ -87,7 +92,12 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 			return fmt.Errorf("unexpected error from accrual: %w", err)
 		}
 		if state != nextState {
-			err := f.storage.UpdateOrderState(ctx, order, nextState)
+			var accrual *float64
+			if nextState == entities.OrderStatusProcessed {
+				accrual = &value
+			}
+
+			err := f.storage.UpdateOrderState(ctx, order, nextState, accrual)
 			if err != nil {
 				return fmt.Errorf("failed to update order state: %w", err)
 			}

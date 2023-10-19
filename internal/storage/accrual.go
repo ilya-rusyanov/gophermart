@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/ilya-rusyanov/gophermart/internal/entities"
@@ -52,7 +51,17 @@ WHERE state != "INVALID" AND state != "PROCESSED"`)
 }
 
 func (a *Accrual) UpdateOrderState(
-	ctx context.Context, orderID entities.OrderID, nextStatus entities.OrderStatus,
+	ctx context.Context,
+	orderID entities.OrderID,
+	nextStatus entities.OrderStatus,
+	value *float64,
 ) error {
-	return errors.New("TODO")
+	_, err := a.db.ExecContext(ctx,
+		`UPDATE orders SET state = $1, value = $2 WHERE id = $3`,
+		nextStatus, value, orderID)
+	if err != nil {
+		return fmt.Errorf("sql error: %w", err)
+	}
+
+	return nil
 }

@@ -46,55 +46,68 @@ func New(addr string) *Adapter {
 }
 
 func (a *Adapter) GetStateOfOrder(ctx context.Context, orderID entities.OrderID) (
-	entities.OrderStatus, error,
+	status entities.OrderStatus, value float64, err error,
 ) {
-	var currentStatus entities.OrderStatus
 	resp, err := http.Get(a.addr)
 	if err != nil {
-		return currentStatus, fmt.Errorf("http request error: %w", err)
+		err = fmt.Errorf("http request error: %w", err)
+		return
 	}
 	defer resp.Body.Close()
 	switch resp.StatusCode {
 	case 200:
-		currentStatus, err = a.readOrderState(resp.Body)
+		status, value, err = a.readOrderState(resp.Body)
 		if err != nil {
-			return currentStatus, fmt.Errorf(
+			err = fmt.Errorf(
 				"failed to read status from body: %w", err)
+			return
 		}
 	case 204:
-		return currentStatus, entities.ErrAccrualOrderIsNotRegistered
+		err = entities.ErrAccrualOrderIsNotRegistered
+		return
 	case 429:
-		period, err := a.readPeriod(resp.Header)
+		var period time.Duration
+		period, err = a.readPeriod(resp.Header)
 		if err != nil {
-			return currentStatus, errors.New("failed to read delay from response header")
+			err = errors.New("failed to read delay from response header")
+			return
 		}
-		return currentStatus, &entities.AccrualTooManyRequestsError{
+		err = &entities.AccrualTooManyRequestsError{
 			Period: period,
 		}
+		return
 	default:
-		return currentStatus, fmt.Errorf("unknown accrual response status %d", resp.StatusCode)
+		err = fmt.Errorf("unknown accrual response status %d", resp.StatusCode)
+		return
 	}
-	return currentStatus, errors.New("TODO")
+
+	err = nil
+	return
 }
 
-func (a *Adapter) readOrderState(reader io.Reader) (entities.OrderStatus, error) {
+func (a *Adapter) readOrderState(reader io.Reader) (
+	status entities.OrderStatus, value float64, err error,
+) {
 	var (
-		result   entities.OrderStatus
 		response accrualResponse
 		ok       bool
 	)
 
-	err := json.NewDecoder(reader).Decode(&response)
+	err = json.NewDecoder(reader).Decode(&response)
 	if err != nil {
-		return result, fmt.Errorf("error decoding JSON: %w", err)
+		err = fmt.Errorf("error decoding JSON: %w", err)
+		return
 	}
 
-	result, ok = toEntityStatus[response.Status]
+	status, ok = toEntityStatus[response.Status]
 	if !ok {
-		return result, fmt.Errorf("unknown order status %q", response.Status)
+		err = fmt.Errorf("unknown order status %q", response.Status)
+		return
 	}
 
-	return result, nil
+	value = response.Accrual
+
+	return
 }
 
 func (a *Adapter) readPeriod(header http.Header) (time.Duration, error) {
