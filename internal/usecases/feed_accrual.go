@@ -32,14 +32,18 @@ type FeedAccrual struct {
 	errors  chan error
 	storage AccrualStorage
 	service AccrualService
+	logger  Logger
 }
 
-func NewFeedAccrual(storage AccrualStorage, service AccrualService) *FeedAccrual {
+func NewFeedAccrual(
+	logger Logger, storage AccrualStorage, service AccrualService,
+) *FeedAccrual {
 	return &FeedAccrual{
 		close:   make(chan struct{}),
 		errors:  make(chan error, 1),
 		storage: storage,
 		service: service,
+		logger:  logger,
 	}
 }
 
@@ -78,22 +82,36 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 		return err
 	}
 
+	if len(unfinishedOrders) > 0 {
+		f.logger.Infof("found %d unchecked orders", len(unfinishedOrders))
+	}
+
 	for order, state := range unfinishedOrders {
 		nextState, value, err := f.service.GetStateOfOrder(ctx, order)
+
 		var delay *entities.AccrualTooManyRequestsError
+
 		switch {
 		case errors.Is(err, entities.ErrAccrualOrderIsNotRegistered):
 			return fmt.Errorf(
 				"order %d is not registered in accrual: %w", order, err)
 		case errors.As(err, &delay):
 			f.ticker.Reset(delay.Period)
+			f.logger.Infof("ticker reset to %v", delay.Period)
 			return nil
 		case err != nil:
 			return fmt.Errorf("unexpected error from accrual: %w", err)
 		}
+
 		if state != nextState {
+			f.logger.Infof("order %d changed state from %q to %q",
+				order, state, nextState)
+
 			var accrual *float64
+
 			if nextState == entities.OrderStatusProcessed {
+				f.logger.Infof("order %d value will be %v",
+					order, value)
 				accrual = &value
 			}
 
@@ -101,6 +119,8 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 			if err != nil {
 				return fmt.Errorf("failed to update order state: %w", err)
 			}
+			f.logger.Infof("order %d state updated successfully",
+				order)
 		}
 	}
 

@@ -13,8 +13,13 @@ import (
 	"github.com/ilya-rusyanov/gophermart/internal/entities"
 )
 
+type Logger interface {
+	Infof(string, ...any)
+}
+
 type Adapter struct {
-	addr string
+	addr   string
+	logger Logger
 }
 
 type orderStatus string
@@ -39,15 +44,17 @@ var toEntityStatus = map[orderStatus]entities.OrderStatus{
 	orderStatusProcessed:  entities.OrderStatusProcessed,
 }
 
-func New(addr string) *Adapter {
+func New(logger Logger, addr string) *Adapter {
 	return &Adapter{
-		addr: addr,
+		addr:   addr,
+		logger: logger,
 	}
 }
 
 func (a *Adapter) GetStateOfOrder(ctx context.Context, orderID entities.OrderID) (
 	status entities.OrderStatus, value float64, err error,
 ) {
+	a.logger.Infof("getting state of order %d...", orderID)
 	resp, err := http.Get(a.addr)
 	if err != nil {
 		err = fmt.Errorf("http request error: %w", err)

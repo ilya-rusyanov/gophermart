@@ -38,7 +38,7 @@ func main() {
 	db := postgres.MustInit(context, logger, config.DSN)
 	defer db.Close()
 
-	accrualAdapter := accrual.New(config.AccrualAddr)
+	accrualAdapter := accrual.New(logger, config.AccrualAddr)
 
 	userStorage := storage.NewUser(db)
 	orderStorage := storage.NewOrder(logger, db)
@@ -53,7 +53,8 @@ func main() {
 	createOrderUsecase := usecases.NewCreateOrder(
 		logger, orderStorage,
 	)
-	feedAccrual := usecases.NewFeedAccrual(accrualStorage, accrualAdapter)
+	feedAccrual := usecases.NewFeedAccrual(
+		logger, accrualStorage, accrualAdapter)
 	accrualErrorsCh := feedAccrual.Run(context, 20*time.Second)
 	defer feedAccrual.Close()
 	go printErrors(logger, accrualErrorsCh)
@@ -87,6 +88,7 @@ func main() {
 			).ServeHTTP)
 		r.Get("/orders",
 			handlers.NewListOrders(
+				logger,
 				orderStorage,
 				errorHandler,
 			).ServeHTTP)

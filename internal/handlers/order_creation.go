@@ -62,4 +62,5 @@ func (c *OrderCreation) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rw.WriteHeader(http.StatusAccepted)
+	c.logger.Infof("order %d created", id)
 }

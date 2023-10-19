@@ -15,16 +15,21 @@ type ListOrdersUsecase interface {
 type ListOrders struct {
 	usecase      ListOrdersUsecase
 	errorHandler ErrorHandler
+	logger       Logger
 }
 
-func NewListOrders(usecase ListOrdersUsecase, errorHandler ErrorHandler) *ListOrders {
+func NewListOrders(
+	logger Logger, usecase ListOrdersUsecase, errorHandler ErrorHandler,
+) *ListOrders {
 	return &ListOrders{
 		usecase:      usecase,
 		errorHandler: errorHandler,
+		logger:       logger,
 	}
 }
 
 func (l *ListOrders) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	l.logger.Info("listing orders")
 	req := entities.ListOrdersRequest{
 		Login: getUser(r.Context()),
 	}
@@ -37,5 +42,6 @@ func (l *ListOrders) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "no data", http.StatusNoContent)
 		return
 	}
+	l.logger.Info("order list success")
 	encodeJSON(rw, l.errorHandler, &list, http.StatusOK)
 }
