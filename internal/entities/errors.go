@@ -17,14 +17,9 @@ var (
 )
 
 type AccrualTooManyRequestsError struct {
-	err    error
 	Period time.Duration
 }
 
-func (e *AccrualTooManyRequestsError) Unwrap() error {
-	return e.err
-}
-
 func (e *AccrualTooManyRequestsError) Error() string {
-	return e.err.Error()
+	return "too many requests to accrual"
 }
