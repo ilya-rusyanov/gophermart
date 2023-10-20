@@ -28,7 +28,6 @@ type AccrualService interface {
 
 type FeedAccrual struct {
 	ticker          *time.Ticker
-	errors          chan error
 	storage         AccrualStorage
 	service         AccrualService
 	logger          Logger
@@ -39,7 +38,6 @@ func NewFeedAccrual(
 	logger Logger, storage AccrualStorage, service AccrualService,
 ) *FeedAccrual {
 	return &FeedAccrual{
-		errors:          make(chan error, 1),
 		processedOrders: make(chan entities.Order, 1),
 		storage:         storage,
 		service:         service,
@@ -50,11 +48,13 @@ func NewFeedAccrual(
 func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) (
 	<-chan entities.Order, <-chan error,
 ) {
+	errors := make(chan error, 1)
+
 	f.ticker = time.NewTicker(basePeriod)
 
 	go func() {
 		defer f.ticker.Stop()
-		defer close(f.errors)
+		defer close(errors)
 
 		for {
 			select {
@@ -63,13 +63,13 @@ func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) (
 			case <-f.ticker.C:
 				err := f.reviseOrders(ctx)
 				if err != nil {
-					f.errors <- err
+					errors <- err
 				}
 			}
 		}
 	}()
 
-	return f.processedOrders, f.errors
+	return f.processedOrders, errors
 }
 
 func (f *FeedAccrual) reviseOrders(ctx context.Context) error {

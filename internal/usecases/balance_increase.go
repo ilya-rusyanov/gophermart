@@ -13,7 +13,6 @@ type BalanceIncrease struct {
 	logger   Logger
 	ordersCh <-chan entities.Order
 	storage  BalanceIncreaseStorage
-	errors   chan error
 }
 
 func NewBalanceIncrease(
@@ -25,10 +24,20 @@ func NewBalanceIncrease(
 		logger:   logger,
 		ordersCh: ordersCh,
 		storage:  storage,
-		errors:   make(chan error),
 	}
 }
 
 func (i *BalanceIncrease) Run(ctx context.Context) <-chan error {
-	return i.errors
+	errors := make(chan error, 1)
+
+	go func() {
+		defer close(errors)
+
+		select {
+		case <-ctx.Done():
+			return
+		}
+	}()
+
+	return errors
 }
