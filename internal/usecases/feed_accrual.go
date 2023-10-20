@@ -10,7 +10,7 @@ import (
 )
 
 type AccrualStorage interface {
-	GetUnfinishedOrdersStates(context.Context) (
+	GetUnfinishedOrders(context.Context) (
 		entities.UnfinishedOrders, error)
 	UpdateOrderState(
 		ctx context.Context,
@@ -77,7 +77,7 @@ func (f *FeedAccrual) Close() {
 
 func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 	unfinishedOrders, err :=
-		f.storage.GetUnfinishedOrdersStates(ctx)
+		f.storage.GetUnfinishedOrders(ctx)
 	if err != nil {
 		return err
 	}

@@ -18,7 +18,7 @@ func NewAccrual(db *sql.DB) *Accrual {
 	}
 }
 
-func (a *Accrual) GetUnfinishedOrdersStates(ctx context.Context) (
+func (a *Accrual) GetUnfinishedOrders(ctx context.Context) (
 	entities.UnfinishedOrders, error,
 ) {
 	result := entities.NewUnfinishedOrders()
