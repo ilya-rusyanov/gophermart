@@ -117,7 +117,7 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 			if err != nil {
 				return fmt.Errorf("failed to update order state: %w", err)
 			}
-			f.logger.Infof("order %d state updated successfully",
+			f.logger.Infof("order %q state updated successfully",
 				order.ID)
 		}
 	}
