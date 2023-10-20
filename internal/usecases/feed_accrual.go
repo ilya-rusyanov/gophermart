@@ -91,7 +91,7 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 		switch {
 		case errors.Is(err, entities.ErrAccrualOrderIsNotRegistered):
 			return fmt.Errorf(
-				"order %d is not registered in accrual: %w", order, err)
+				"order %q is not registered in accrual: %w", order.ID, err)
 		case errors.As(err, &delay):
 			f.ticker.Reset(delay.Period)
 			f.logger.Infof("ticker reset to %v", delay.Period)
@@ -101,14 +101,14 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 		}
 
 		if order.Status != nextStatus {
-			f.logger.Infof("order %d changed state from %q to %q",
-				order, order.Status, nextStatus)
+			f.logger.Infof("order %q changed state from %q to %q",
+				order.ID, order.Status, nextStatus)
 
 			var accrual *float64
 
 			if nextStatus == entities.OrderStatusProcessed {
-				f.logger.Infof("order %d value will be %v",
-					order, value)
+				f.logger.Infof("order %q value will be %v",
+					order.ID, value)
 				accrual = &value
 			}
 
@@ -118,7 +118,7 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 				return fmt.Errorf("failed to update order state: %w", err)
 			}
 			f.logger.Infof("order %d state updated successfully",
-				order)
+				order.ID)
 		}
 	}
 
