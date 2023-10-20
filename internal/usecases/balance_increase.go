@@ -40,13 +40,7 @@ func (i *BalanceIncrease) Run(ctx context.Context) <-chan error {
 			case <-ctx.Done():
 				return
 			case order := <-i.ordersCh:
-				if order.Accrual == nil {
-					break
-				}
-
-				err := i.storage.IncreaseBalance(
-					ctx, order.User, *order.Accrual,
-				)
+				err := i.increase(ctx, order)
 				if err != nil {
 					errors <- fmt.Errorf(
 						"storage failed to increase balance: %w",
@@ -57,4 +51,23 @@ func (i *BalanceIncrease) Run(ctx context.Context) <-chan error {
 	}()
 
 	return errors
+}
+
+func (i *BalanceIncrease) increase(
+	ctx context.Context, order entities.Order,
+) error {
+	if order.Accrual == nil {
+		return nil
+	}
+
+	err := i.storage.IncreaseBalance(
+		ctx, order.User, *order.Accrual,
+	)
+	if err != nil {
+		return fmt.Errorf("storage failed to increase balance: %w", err)
+	}
+	i.logger.Infof(
+		"user %q balance increased by %v",
+		order.User, order.Accrual)
+	return nil
 }
