@@ -2,11 +2,13 @@ package usecases
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ilya-rusyanov/gophermart/internal/entities"
 )
 
 type BalanceIncreaseStorage interface {
+	IncreaseBalance(context.Context, entities.Login, entities.Currency) error
 }
 
 type BalanceIncrease struct {
@@ -33,9 +35,24 @@ func (i *BalanceIncrease) Run(ctx context.Context) <-chan error {
 	go func() {
 		defer close(errors)
 
-		select {
-		case <-ctx.Done():
-			return
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case order := <-i.ordersCh:
+				if order.Accrual == nil {
+					break
+				}
+
+				err := i.storage.IncreaseBalance(
+					ctx, order.User, *order.Accrual,
+				)
+				if err != nil {
+					errors <- fmt.Errorf(
+						"storage failed to increase balance: %w",
+						err)
+				}
+			}
 		}
 	}()
 
