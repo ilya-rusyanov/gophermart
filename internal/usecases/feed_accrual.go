@@ -11,7 +11,7 @@ import (
 
 type AccrualStorage interface {
 	GetUnfinishedOrders(context.Context) (
-		entities.UnfinishedOrders, error)
+		entities.OrderList, error)
 	UpdateOrderState(
 		ctx context.Context,
 		orderID entities.OrderID,
@@ -21,7 +21,7 @@ type AccrualStorage interface {
 }
 
 type AccrualService interface {
-	GetStateOfOrder(context.Context, entities.OrderID) (
+	GetStateOfOrder(ctx context.Context, orderID entities.OrderID) (
 		status entities.OrderStatus, value float64, err error,
 	)
 }
@@ -86,8 +86,8 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 		f.logger.Infof("found %d unchecked orders", len(unfinishedOrders))
 	}
 
-	for order, state := range unfinishedOrders {
-		nextState, value, err := f.service.GetStateOfOrder(ctx, order)
+	for _, order := range unfinishedOrders {
+		nextStatus, value, err := f.service.GetStateOfOrder(ctx, order.ID)
 
 		var delay *entities.AccrualTooManyRequestsError
 
@@ -103,19 +103,20 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 			return fmt.Errorf("unexpected error from accrual: %w", err)
 		}
 
-		if state != nextState {
+		if order.Status != nextStatus {
 			f.logger.Infof("order %d changed state from %q to %q",
-				order, state, nextState)
+				order, order.Status, nextStatus)
 
 			var accrual *float64
 
-			if nextState == entities.OrderStatusProcessed {
+			if nextStatus == entities.OrderStatusProcessed {
 				f.logger.Infof("order %d value will be %v",
 					order, value)
 				accrual = &value
 			}
 
-			err := f.storage.UpdateOrderState(ctx, order, nextState, accrual)
+			err := f.storage.UpdateOrderState(
+				ctx, order.ID, nextStatus, accrual)
 			if err != nil {
 				return fmt.Errorf("failed to update order state: %w", err)
 			}

@@ -57,7 +57,7 @@ func (a *Adapter) GetStateOfOrder(ctx context.Context, orderID entities.OrderID)
 ) {
 	var path string
 
-	path, err = url.JoinPath(a.addr, strconv.FormatInt(int64(orderID), 10))
+	path, err = url.JoinPath(a.addr, string(orderID))
 	if err != nil {
 		err = fmt.Errorf("failed to construct url: %w", err)
 		return

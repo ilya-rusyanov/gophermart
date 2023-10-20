@@ -1,3 +1,3 @@
 package entities
 
-type OrderID int64
+type OrderID string

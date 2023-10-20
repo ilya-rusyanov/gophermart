@@ -19,12 +19,12 @@ func NewAccrual(db *sql.DB) *Accrual {
 }
 
 func (a *Accrual) GetUnfinishedOrders(ctx context.Context) (
-	entities.UnfinishedOrders, error,
+	entities.OrderList, error,
 ) {
-	result := entities.NewUnfinishedOrders()
+	var result entities.OrderList
 
 	rows, err := a.db.QueryContext(ctx,
-		`SELECT id, state FROM orders
+		`SELECT id, state, upload_time, username FROM orders
 WHERE state != 'INVALID' AND state != 'PROCESSED'`)
 	if err != nil {
 		return result, fmt.Errorf("failed to select order states: %w", err)
@@ -32,15 +32,15 @@ WHERE state != 'INVALID' AND state != 'PROCESSED'`)
 	defer rows.Close()
 
 	var (
-		id    entities.OrderID
-		state entities.OrderStatus
+		order entities.Order
 	)
 	for rows.Next() {
-		err := rows.Scan(&id, &state)
+		err := rows.Scan(
+			&order.ID, &order.Status, &order.UploadedAt, &order.User)
 		if err != nil {
 			return result, fmt.Errorf("failed to scan order state: %w", err)
 		}
-		result[id] = state
+		result = append(result, order)
 	}
 
 	err = rows.Err()
