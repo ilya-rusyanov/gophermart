@@ -27,38 +27,39 @@ type AccrualService interface {
 }
 
 type FeedAccrual struct {
-	close   chan struct{}
-	ticker  *time.Ticker
-	errors  chan error
-	storage AccrualStorage
-	service AccrualService
-	logger  Logger
+	ticker          *time.Ticker
+	errors          chan error
+	storage         AccrualStorage
+	service         AccrualService
+	logger          Logger
+	processedOrders chan entities.Order
 }
 
 func NewFeedAccrual(
 	logger Logger, storage AccrualStorage, service AccrualService,
 ) *FeedAccrual {
 	return &FeedAccrual{
-		close:   make(chan struct{}),
-		errors:  make(chan error, 1),
-		storage: storage,
-		service: service,
-		logger:  logger,
+		errors:          make(chan error, 1),
+		processedOrders: make(chan entities.Order, 1),
+		storage:         storage,
+		service:         service,
+		logger:          logger,
 	}
 }
 
-func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) <-chan error {
+func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) (
+	<-chan entities.Order, <-chan error,
+) {
 	f.ticker = time.NewTicker(basePeriod)
 
 	go func() {
 		defer f.ticker.Stop()
 		defer close(f.errors)
 
-	mainLoop:
 		for {
 			select {
-			case <-f.close:
-				break mainLoop
+			case <-ctx.Done():
+				return
 			case <-f.ticker.C:
 				err := f.reviseOrders(ctx)
 				if err != nil {
@@ -68,11 +69,7 @@ func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) <-chan 
 		}
 	}()
 
-	return f.errors
-}
-
-func (f *FeedAccrual) Close() {
-	close(f.close)
+	return f.processedOrders, f.errors
 }
 
 func (f *FeedAccrual) reviseOrders(ctx context.Context) error {

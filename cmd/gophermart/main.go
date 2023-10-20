@@ -33,7 +33,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	context := context.Background()
+	context, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	db := postgres.MustInit(context, logger, config.DSN)
 	defer db.Close()
@@ -54,11 +55,18 @@ func main() {
 	createOrderUsecase := usecases.NewCreateOrder(
 		logger, orderStorage,
 	)
+
 	feedAccrual := usecases.NewFeedAccrual(
 		logger, accrualStorage, accrualAdapter)
-	accrualErrorsCh := feedAccrual.Run(context, time.Second)
-	defer feedAccrual.Close()
-	go printErrors(logger, accrualErrorsCh)
+	processedOrdersCh, accrualErrorsCh :=
+		feedAccrual.Run(context, 1*time.Second)
+
+	balanceIncrease := usecases.NewBalanceIncrease(
+		logger, processedOrdersCh, balanceStorage)
+	balanceIncreaseErrors := balanceIncrease.Run(context)
+
+	errors := fanInErrors(context, accrualErrorsCh, balanceIncreaseErrors)
+	go printErrors(context, logger, errors)
 
 	errorHandler := handlers.NewDefaultErrorHandler(logger).Handle
 
