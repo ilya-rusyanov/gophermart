@@ -103,12 +103,14 @@ func main() {
 				orderStorage,
 				errorHandler,
 			).ServeHTTP)
-		r.Get("/balance",
-			handlers.NewShowBalance(
-				logger,
-				balanceStorage,
-				errorHandler,
-			).ServeHTTP)
+		r.Route("/balance", func(r chi.Router) {
+			r.Get("/",
+				handlers.NewShowBalance(
+					logger,
+					balanceStorage,
+					errorHandler,
+				).ServeHTTP)
+		})
 	})
 
 	httpServer := httpserver.New(config.ListenAddr, r)
