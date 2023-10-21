@@ -35,11 +35,14 @@ func (i *BalanceIncrease) Run(ctx context.Context) <-chan error {
 	go func() {
 		defer close(errors)
 
+		i.logger.Info("staring balance increase worker")
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			case order := <-i.ordersCh:
+				i.logger.Infof("processing order %#v", order)
 				err := i.increase(ctx, order)
 				if err != nil {
 					errors <- fmt.Errorf(
@@ -49,6 +52,8 @@ func (i *BalanceIncrease) Run(ctx context.Context) <-chan error {
 			}
 		}
 	}()
+
+	i.logger.Info("balance increase worker stop")
 
 	return errors
 }

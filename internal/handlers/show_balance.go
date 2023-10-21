@@ -40,7 +40,7 @@ func (s *ShowBalance) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.logger.Info("show balance success")
+	s.logger.Infof("show balance success for user %q", user)
 
 	encodeJSON(rw, s.errorHandler, &balance, http.StatusOK)
 }
