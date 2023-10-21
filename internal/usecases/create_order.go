@@ -52,12 +52,11 @@ func (o *CreateOrder) CreateOrder(
 	if err != nil {
 		return fmt.Errorf("storage failed to create order: %w", err)
 	}
+
 	err = tx.Commit()
 	if err != nil {
 		return fmt.Errorf("failed to commit create order transaction: %w", err)
 	}
-
-	// TODO enqueue to accrual
 
 	return nil
 }

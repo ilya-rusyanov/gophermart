@@ -36,6 +36,8 @@ func (h *DefaultErrorHandler) Handle(rw http.ResponseWriter, err error) {
 		statusCode = http.StatusConflict
 	case errors.Is(err, entities.ErrLuhnValidation):
 		statusCode = http.StatusUnprocessableEntity
+	case errors.Is(err, entities.ErrInsufficientBalance):
+		statusCode = http.StatusPaymentRequired
 	default:
 		statusCode = http.StatusInternalServerError
 	}

@@ -15,6 +15,7 @@ var (
 	ErrAlreadyUploadedOtherUser    = errors.New("order was alredy uploaded by other user")
 	ErrLuhnValidation              = errors.New("failed to verify Luhn")
 	ErrAccrualOrderIsNotRegistered = errors.New("order is not registered in accrual")
+	ErrInsufficientBalance         = errors.New("isufficient balance")
 )
 
 type AccrualTooManyRequestsError struct {

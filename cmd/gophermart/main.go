@@ -45,6 +45,7 @@ func main() {
 	orderStorage := storage.NewOrder(logger, db)
 	accrualStorage := storage.NewAccrual(db)
 	balanceStorage := storage.NewBalance(db)
+	withdrawalStorage := storage.NewWithdrawal(db)
 
 	registerUsecase := usecases.NewRegister(
 		logger, tokenExpiration, signingKey, userStorage,
@@ -65,7 +66,7 @@ func main() {
 		logger, processedOrdersCh, balanceStorage)
 	balanceIncreaseErrors := balanceIncrease.Run(context)
 
-	withdrawUsecase := usecases.NewWithdraw()
+	withdrawUsecase := usecases.NewWithdraw(withdrawalStorage)
 
 	errors := fanInErrors(context, accrualErrorsCh, balanceIncreaseErrors)
 	go printErrors(context, logger, errors)
