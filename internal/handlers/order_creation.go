@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ilya-rusyanov/gophermart/internal/entities"
-
-	"github.com/theplant/luhn"
 )
 
 type OrderCreator interface {
@@ -44,7 +41,7 @@ func (c *OrderCreation) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := buf.String()
+	id := entities.OrderID(buf.String())
 	if len(id) == 0 {
 		c.errorHandler(rw,
 			fmt.Errorf(
@@ -53,20 +50,13 @@ func (c *OrderCreation) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	idInt, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		c.errorHandler(rw,
-			fmt.Errorf("failed to read integer from order ID: %w",
-				entities.ErrInvalidOrder))
-	}
-
-	if !luhn.Valid(int(idInt)) {
-		c.errorHandler(rw, entities.ErrLuhnValidation)
+	if err := checkOrder(id); err != nil {
+		c.errorHandler(rw, err)
 		return
 	}
 
 	createRequest := entities.CreateOrderRequest{
-		ID:   entities.OrderID(id),
+		ID:   id,
 		User: getUser(r.Context()),
 		Time: time.Now(),
 	}

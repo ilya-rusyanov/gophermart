@@ -40,6 +40,11 @@ func (w *Withdraw) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := checkOrder(wr.Order); err != nil {
+		w.errorHandler(rw, err)
+		return
+	}
+
 	wr.User = getUser(r.Context())
 
 	err = w.withdrawer.Withdraw(r.Context(), wr)
