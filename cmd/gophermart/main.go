@@ -72,12 +72,14 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Use(middleware.NewLogger(logger).Middleware)
 	r.Use(middleware.NewAuth(
 		signingKey,
 		errorHandler,
 		"/api/user/register",
 		"/api/user/login",
 	).Middleware)
+
 	r.Route("/api/user", func(r chi.Router) {
 		r.Post("/register",
 			handlers.NewAuth(
