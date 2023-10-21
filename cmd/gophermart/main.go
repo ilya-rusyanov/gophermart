@@ -65,6 +65,8 @@ func main() {
 		logger, processedOrdersCh, balanceStorage)
 	balanceIncreaseErrors := balanceIncrease.Run(context)
 
+	withdrawUsecase := usecases.NewWithdraw()
+
 	errors := fanInErrors(context, accrualErrorsCh, balanceIncreaseErrors)
 	go printErrors(context, logger, errors)
 
@@ -108,6 +110,12 @@ func main() {
 				handlers.NewShowBalance(
 					logger,
 					balanceStorage,
+					errorHandler,
+				).ServeHTTP)
+			r.Post("/withdraw",
+				handlers.NewWithdraw(
+					logger,
+					withdrawUsecase,
 					errorHandler,
 				).ServeHTTP)
 		})
