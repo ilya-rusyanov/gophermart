@@ -12,17 +12,12 @@ import (
 type AccrualStorage interface {
 	GetUnfinishedOrders(context.Context) (
 		entities.OrderList, error)
-	UpdateOrderState(
-		ctx context.Context,
-		orderID entities.OrderID,
-		status entities.OrderStatus,
-		accrual *float64,
-	) error
+	UpdateOrder(ctx context.Context, order entities.Order) error
 }
 
 type AccrualService interface {
 	GetStateOfOrder(ctx context.Context, orderID entities.OrderID) (
-		status entities.OrderStatus, value float64, err error,
+		status entities.OrderStatus, value entities.Currency, err error,
 	)
 }
 
@@ -101,21 +96,23 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 		}
 
 		if order.Status != nextStatus {
+			update := order
+			update.Status = nextStatus
+
 			f.logger.Infof("order %q changed state from %q to %q",
 				order.ID, order.Status, nextStatus)
-
-			var accrual *float64
 
 			if nextStatus == entities.OrderStatusProcessed {
 				f.logger.Infof("order %q value will be %v",
 					order.ID, value)
-				accrual = &value
+				update.Accrual = &value
+				f.processedOrders <- update
 			}
 
-			err := f.storage.UpdateOrderState(
-				ctx, order.ID, nextStatus, accrual)
+			err := f.storage.UpdateOrder(ctx, update)
 			if err != nil {
-				return fmt.Errorf("failed to update order state: %w", err)
+				return fmt.Errorf(
+					"failed to update order state: %w", err)
 			}
 			f.logger.Infof("order %q state updated successfully",
 				order.ID)

@@ -53,7 +53,7 @@ func New(logger Logger, addr string) *Adapter {
 }
 
 func (a *Adapter) GetStateOfOrder(ctx context.Context, orderID entities.OrderID) (
-	status entities.OrderStatus, value float64, err error,
+	status entities.OrderStatus, value entities.Currency, err error,
 ) {
 	var path string
 
@@ -102,7 +102,7 @@ func (a *Adapter) GetStateOfOrder(ctx context.Context, orderID entities.OrderID)
 }
 
 func (a *Adapter) readOrderState(reader io.Reader) (
-	status entities.OrderStatus, value float64, err error,
+	status entities.OrderStatus, value entities.Currency, err error,
 ) {
 	var (
 		response accrualResponse
@@ -121,7 +121,7 @@ func (a *Adapter) readOrderState(reader io.Reader) (
 		return
 	}
 
-	value = response.Accrual
+	value = entities.Currency(response.Accrual)
 
 	return
 }

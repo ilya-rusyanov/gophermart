@@ -51,15 +51,13 @@ WHERE state != 'INVALID' AND state != 'PROCESSED'`)
 	return result, nil
 }
 
-func (a *Accrual) UpdateOrderState(
+func (a *Accrual) UpdateOrder(
 	ctx context.Context,
-	orderID entities.OrderID,
-	nextStatus entities.OrderStatus,
-	value *float64,
+	order entities.Order,
 ) error {
 	_, err := a.db.ExecContext(ctx,
 		`UPDATE orders SET state = $1, value = $2 WHERE id = $3`,
-		nextStatus, value, orderID)
+		order.Status, order.Accrual, order.ID)
 	if err != nil {
 		return fmt.Errorf("sql error: %w", err)
 	}
