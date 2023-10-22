@@ -16,4 +16,5 @@ type WithdrawalTx interface {
 	GetCurrentBalance(context.Context, entities.Login) (entities.Currency, error)
 	DecreaseBalance(context.Context, entities.Login, entities.Currency) error
 	IncreaseWithdrawn(context.Context, entities.Login, entities.Currency) error
+	RecordWithdrawal(context.Context, entities.WithdrawalRecord) error
 }

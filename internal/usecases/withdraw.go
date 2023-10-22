@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/ilya-rusyanov/gophermart/internal/entities"
 	"github.com/ilya-rusyanov/gophermart/internal/ports"
@@ -44,6 +45,18 @@ func (w *Withdraw) Withdraw(
 	err = tx.IncreaseWithdrawn(ctx, request.User, request.Sum)
 	if err != nil {
 		return fmt.Errorf("failed to increase withdrawn amount: %w", err)
+	}
+
+	record := entities.WithdrawalRecord{
+		User:        request.User,
+		Order:       request.Order,
+		Sum:         request.Sum,
+		ProcessedAt: time.Now(),
+	}
+
+	err = tx.RecordWithdrawal(ctx, record)
+	if err != nil {
+		return fmt.Errorf("failed to record withdrawal: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {

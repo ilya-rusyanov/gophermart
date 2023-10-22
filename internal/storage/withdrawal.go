@@ -119,3 +119,18 @@ func (w *WithdrawalTx) IncreaseWithdrawn(
 
 	return nil
 }
+
+func (w *WithdrawalTx) RecordWithdrawal(
+	ctx context.Context,
+	record entities.WithdrawalRecord,
+) error {
+	_, err := w.tx.ExecContext(ctx,
+		`INSERT INTO withdrawals (id, username, upload_time, value)
+VALUES ($1, $2, $3, $4)`,
+		record.Order, record.User, record.ProcessedAt, record.Sum)
+	if err != nil {
+		return fmt.Errorf("failed to insert values: %w", err)
+	}
+
+	return nil
+}
