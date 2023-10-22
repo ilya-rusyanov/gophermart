@@ -32,6 +32,39 @@ func (w *Withdrawal) Begin(ctx context.Context) (ports.WithdrawalTx, error) {
 	return &WithdrawalTx{tx: tx}, nil
 }
 
+func (w *Withdrawal) ListWithdrawals(
+	ctx context.Context, user entities.Login,
+) (entities.Withdrawals, error) {
+	var result entities.Withdrawals
+
+	rows, err := w.db.QueryContext(ctx,
+		`SELECT id, upload_time, value FROM withdrawals WHERE username = $1`,
+		user)
+	if err != nil {
+		return result, fmt.Errorf("failed to select %w", err)
+	}
+
+	var withdrawal entities.Withdrawal
+	for rows.Next() {
+		err := rows.Scan(
+			&withdrawal.Order,
+			&withdrawal.ProcessedAt,
+			&withdrawal.Sum,
+		)
+		if err != nil {
+			return result, fmt.Errorf("failed to scan: %w", err)
+		}
+
+		result = append(result, withdrawal)
+	}
+
+	if err := rows.Err(); err != nil {
+		return result, fmt.Errorf("failed to finalize rows: %w", err)
+	}
+
+	return result, nil
+}
+
 func (w *WithdrawalTx) Commit() error {
 	return w.tx.Commit()
 }

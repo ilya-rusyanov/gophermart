@@ -53,5 +53,13 @@ state order_state NOT NULL, value numeric)`)
 		return fmt.Errorf("failed to create order table: %w", err)
 	}
 
+	_, err = db.ExecContext(ctx,
+		`CREATE TABLE IF NOT EXISTS withdrawals
+(id text PRIMARY KEY, username text NOT NULL, upload_time timestamptz NOT NULL,
+value numeric NOT NULL)`)
+	if err != nil {
+		return fmt.Errorf("failed to create withdrawals table: %w", err)
+	}
+
 	return nil
 }

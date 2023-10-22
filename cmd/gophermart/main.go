@@ -120,6 +120,12 @@ func main() {
 					errorHandler,
 				).ServeHTTP)
 		})
+		r.Get("/withdrawals",
+			handlers.NewListWithdrawals(
+				logger,
+				withdrawalStorage,
+				errorHandler,
+			).ServeHTTP)
 	})
 
 	httpServer := httpserver.New(config.ListenAddr, r)
