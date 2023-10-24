@@ -22,7 +22,6 @@ type AccrualService interface {
 }
 
 type FeedAccrual struct {
-	ticker          *time.Ticker
 	storage         AccrualStorage
 	service         AccrualService
 	logger          Logger
@@ -45,18 +44,18 @@ func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) (
 ) {
 	errors := make(chan error, 1)
 
-	f.ticker = time.NewTicker(basePeriod)
+	ticker := time.NewTicker(basePeriod)
 
 	go func() {
-		defer f.ticker.Stop()
+		defer ticker.Stop()
 		defer close(errors)
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case <-f.ticker.C:
-				err := f.reviseOrders(ctx)
+			case <-ticker.C:
+				err := f.reviseOrders(ctx, ticker)
 				if err != nil {
 					errors <- err
 				}
@@ -67,7 +66,7 @@ func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) (
 	return f.processedOrders, errors
 }
 
-func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
+func (f *FeedAccrual) reviseOrders(ctx context.Context, ticker *time.Ticker) error {
 	unfinishedOrders, err :=
 		f.storage.GetUnfinishedOrders(ctx)
 	if err != nil {
@@ -88,7 +87,7 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 			return fmt.Errorf(
 				"order %q is not registered in accrual: %w", order.ID, err)
 		case errors.As(err, &delay):
-			f.ticker.Reset(delay.Period)
+			ticker.Reset(delay.Period)
 			f.logger.Infof("ticker reset to %v", delay.Period)
 			return nil
 		case err != nil:
