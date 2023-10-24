@@ -42,7 +42,7 @@ func main() {
 	accrualAdapter := accrual.New(logger, config.AccrualAddr)
 
 	userStorage := storage.NewUser(db)
-	orderStorage := storage.NewOrder(logger, db)
+	orderStorage := storage.NewOrder(db, logger)
 	accrualStorage := storage.NewAccrual(db)
 	balanceStorage := storage.NewBalance(db)
 	withdrawalStorage := storage.NewWithdrawal(db)

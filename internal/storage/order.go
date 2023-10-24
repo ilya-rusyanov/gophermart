@@ -20,7 +20,7 @@ type CreateOrderTransaction struct {
 	logger Logger
 }
 
-func NewOrder(logger Logger, db *sql.DB) *Order {
+func NewOrder(db *sql.DB, logger Logger) *Order {
 	return &Order{
 		db:     db,
 		logger: logger,
