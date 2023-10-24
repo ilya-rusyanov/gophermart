@@ -64,3 +64,16 @@ func (a *Accrual) UpdateOrder(
 
 	return nil
 }
+
+func (a *Accrual) IncreaseBalance(
+	ctx context.Context, user entities.Login, value entities.Currency,
+) error {
+	_, err := a.db.ExecContext(ctx,
+		`UPDATE users SET balance = balance + $1 WHERE username = $2`,
+		value, user)
+	if err != nil {
+		return fmt.Errorf("sql error increasing balance: %w", err)
+	}
+
+	return nil
+}

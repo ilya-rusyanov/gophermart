@@ -13,6 +13,7 @@ type AccrualStorage interface {
 	GetUnfinishedOrders(context.Context) (
 		entities.OrderList, error)
 	UpdateOrder(ctx context.Context, order entities.Order) error
+	IncreaseBalance(context.Context, entities.Login, entities.Currency) error
 }
 
 type AccrualService interface {
@@ -22,26 +23,22 @@ type AccrualService interface {
 }
 
 type FeedAccrual struct {
-	storage         AccrualStorage
-	service         AccrualService
-	logger          Logger
-	processedOrders chan entities.Order
+	storage AccrualStorage
+	service AccrualService
+	logger  Logger
 }
 
 func NewFeedAccrual(
 	logger Logger, storage AccrualStorage, service AccrualService,
 ) *FeedAccrual {
 	return &FeedAccrual{
-		processedOrders: make(chan entities.Order, 1),
-		storage:         storage,
-		service:         service,
-		logger:          logger,
+		storage: storage,
+		service: service,
+		logger:  logger,
 	}
 }
 
-func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) (
-	<-chan entities.Order, <-chan error,
-) {
+func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) <-chan error {
 	errors := make(chan error, 1)
 
 	ticker := time.NewTicker(basePeriod)
@@ -63,7 +60,7 @@ func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) (
 		}
 	}()
 
-	return f.processedOrders, errors
+	return errors
 }
 
 func (f *FeedAccrual) reviseOrders(ctx context.Context, ticker *time.Ticker) error {
@@ -105,7 +102,10 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context, ticker *time.Ticker) err
 				f.logger.Infof("order %q value will be %v",
 					order.ID, value)
 				update.Accrual = &value
-				f.processedOrders <- update
+				err = f.increaseBalance(ctx, update)
+				if err != nil {
+					return fmt.Errorf("cannot increase balance: %w", err)
+				}
 			}
 
 			err := f.storage.UpdateOrder(ctx, update)
@@ -118,5 +118,24 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context, ticker *time.Ticker) err
 		}
 	}
 
+	return nil
+}
+
+func (f *FeedAccrual) increaseBalance(
+	ctx context.Context, order entities.Order,
+) error {
+	if order.Accrual == nil {
+		return nil
+	}
+
+	err := f.storage.IncreaseBalance(
+		ctx, order.User, *order.Accrual,
+	)
+	if err != nil {
+		return fmt.Errorf("storage failed to increase balance: %w", err)
+	}
+	f.logger.Infof(
+		"user %q balance increased by %v",
+		order.User, order.Accrual)
 	return nil
 }

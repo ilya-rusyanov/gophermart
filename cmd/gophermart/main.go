@@ -63,17 +63,11 @@ func main() {
 
 	feedAccrual := usecases.NewFeedAccrual(
 		logger, accrualStorage, accrualAdapter)
-	processedOrdersCh, accrualErrorsCh :=
-		feedAccrual.Run(context, 1*time.Second)
+	accrualErrorsCh := feedAccrual.Run(context, 1*time.Second)
 
-	balanceIncrease := usecases.NewBalanceIncrease(
-		logger, processedOrdersCh, balanceStorage)
-	balanceIncreaseErrors := balanceIncrease.Run(context)
+	go printErrors(context, logger, accrualErrorsCh)
 
 	withdrawUsecase := usecases.NewWithdraw(withdrawalStorage)
-
-	errors := fanInErrors(context, accrualErrorsCh, balanceIncreaseErrors)
-	go printErrors(context, logger, errors)
 
 	errorHandler := handlers.NewDefaultErrorHandler(logger).Handle
 
