@@ -97,7 +97,6 @@ func (a *Adapter) GetStateOfOrder(ctx context.Context, orderID entities.OrderID)
 		return
 	}
 
-	err = nil
 	return
 }
 
