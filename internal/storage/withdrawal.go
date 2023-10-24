@@ -80,7 +80,7 @@ func (w *WithdrawalTx) GetCurrentBalance(
 	var result entities.Currency
 
 	row := w.tx.QueryRowContext(ctx,
-		`SELECT balance FROM users WHERE username = $1`,
+		`SELECT balance FROM users WHERE username = $1 FOR UPDATE`,
 		user)
 
 	if err := row.Scan(&result); err != nil {
