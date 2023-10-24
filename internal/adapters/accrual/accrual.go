@@ -71,17 +71,17 @@ func (a *Adapter) GetStateOfOrder(ctx context.Context, orderID entities.OrderID)
 	}
 	defer resp.Body.Close()
 	switch resp.StatusCode {
-	case 200:
+	case http.StatusOK:
 		status, value, err = a.readOrderState(resp.Body)
 		if err != nil {
 			err = fmt.Errorf(
 				"failed to read status from body: %w", err)
 			return
 		}
-	case 204:
+	case http.StatusNoContent:
 		err = entities.ErrAccrualOrderIsNotRegistered
 		return
-	case 429:
+	case http.StatusTooManyRequests:
 		var period time.Duration
 		period, err = a.readPeriod(resp.Header)
 		if err != nil {
