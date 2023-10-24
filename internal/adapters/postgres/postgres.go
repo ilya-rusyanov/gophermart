@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -12,22 +13,22 @@ type Logger interface {
 	Infof(string, ...any)
 }
 
-func MustInit(ctx context.Context, logger Logger, dsn string) *sql.DB {
+func MustInit(ctx context.Context, logger Logger, dsn string, maxUsernameLen int) *sql.DB {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		panic(err)
 	}
-	err = migrate(ctx, db)
+	err = migrate(ctx, db, maxUsernameLen)
 	if err != nil {
 		panic(err)
 	}
 	return db
 }
 
-func migrate(ctx context.Context, db *sql.DB) error {
+func migrate(ctx context.Context, db *sql.DB, maxUserNameLen int) error {
 	_, err := db.ExecContext(ctx,
 		`CREATE TABLE IF NOT EXISTS users
-(username text PRIMARY KEY,
+(username varchar(`+strconv.Itoa(maxUserNameLen)+`) PRIMARY KEY,
 password text NOT NULL,
 balance numeric NOT NULL DEFAULT 0,
 withdrawn numeric NOT NULL DEFAULT 0)`)

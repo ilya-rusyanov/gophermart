@@ -25,7 +25,11 @@ const signingKey = "TODO"
 
 func main() {
 	config := config.New()
-	config.Parse()
+	err := config.Parse()
+	if err != nil {
+		fmt.Printf("failed to parse configuration: %q\n", err)
+		os.Exit(1)
+	}
 
 	logger, err := logger.New(config.LogLevel)
 	if err != nil {
@@ -36,7 +40,7 @@ func main() {
 	context, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	db := postgres.MustInit(context, logger, config.DSN)
+	db := postgres.MustInit(context, logger, config.DSN, config.MaxUserNameLen)
 	defer db.Close()
 
 	accrualAdapter := accrual.New(logger, config.AccrualAddr)
