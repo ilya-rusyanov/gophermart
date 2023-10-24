@@ -84,48 +84,15 @@ func main() {
 	).Middleware)
 
 	r.Route("/api/user", func(r chi.Router) {
-		r.Post("/register",
-			handlers.NewAuth(
-				registerUsecase,
-				errorHandler,
-			).ServeHTTP)
-		r.Post("/login",
-			handlers.NewAuth(
-				loginUsecase,
-				errorHandler,
-			).ServeHTTP)
-		r.Post("/orders",
-			handlers.NewOrderCreation(
-				logger,
-				createOrderUsecase,
-				errorHandler,
-			).ServeHTTP)
-		r.Get("/orders",
-			handlers.NewListOrders(
-				logger,
-				orderStorage,
-				errorHandler,
-			).ServeHTTP)
+		r.Post("/register", handlers.NewAuth(registerUsecase, errorHandler).ServeHTTP)
+		r.Post("/login", handlers.NewAuth(loginUsecase, errorHandler).ServeHTTP)
+		r.Post("/orders", handlers.NewOrderCreation(logger, createOrderUsecase, errorHandler).ServeHTTP)
+		r.Get("/orders", handlers.NewListOrders(logger, orderStorage, errorHandler).ServeHTTP)
 		r.Route("/balance", func(r chi.Router) {
-			r.Get("/",
-				handlers.NewShowBalance(
-					logger,
-					balanceStorage,
-					errorHandler,
-				).ServeHTTP)
-			r.Post("/withdraw",
-				handlers.NewWithdraw(
-					logger,
-					withdrawUsecase,
-					errorHandler,
-				).ServeHTTP)
+			r.Get("/", handlers.NewShowBalance(logger, balanceStorage, errorHandler).ServeHTTP)
+			r.Post("/withdraw", handlers.NewWithdraw(logger, withdrawUsecase, errorHandler).ServeHTTP)
 		})
-		r.Get("/withdrawals",
-			handlers.NewListWithdrawals(
-				logger,
-				withdrawalStorage,
-				errorHandler,
-			).ServeHTTP)
+		r.Get("/withdrawals", handlers.NewListWithdrawals(logger, withdrawalStorage, errorHandler).ServeHTTP)
 	})
 
 	httpServer := httpserver.New(config.ListenAddr, r)
