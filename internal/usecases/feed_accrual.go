@@ -39,31 +39,39 @@ func NewFeedAccrual(
 }
 
 func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) <-chan error {
-	errors := make(chan error, 1)
+	errCh := make(chan error, 1)
 
 	ticker := time.NewTicker(basePeriod)
 
 	go func() {
 		defer ticker.Stop()
-		defer close(errors)
+		defer close(errCh)
 
 		for {
+		selectLoop:
 			select {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				err := f.reviseOrders(ctx, ticker)
-				if err != nil {
-					errors <- err
+				err := f.reviseOrders(ctx)
+				var delay *entities.AccrualTooManyRequestsError
+				switch {
+				case errors.As(err, &delay):
+					ticker.Reset(delay.Period)
+					f.logger.Infof("ticker reset to %v", delay.Period)
+					break selectLoop
+				case err != nil:
+					errCh <- err
 				}
+				ticker.Reset(basePeriod)
 			}
 		}
 	}()
 
-	return errors
+	return errCh
 }
 
-func (f *FeedAccrual) reviseOrders(ctx context.Context, ticker *time.Ticker) error {
+func (f *FeedAccrual) reviseOrders(ctx context.Context) error {
 	unfinishedOrders, err :=
 		f.storage.GetUnfinishedOrders(ctx)
 	if err != nil {
@@ -77,16 +85,10 @@ func (f *FeedAccrual) reviseOrders(ctx context.Context, ticker *time.Ticker) err
 	for _, order := range unfinishedOrders {
 		nextStatus, value, err := f.service.GetStateOfOrder(ctx, order.ID)
 
-		var delay *entities.AccrualTooManyRequestsError
-
 		switch {
 		case errors.Is(err, entities.ErrAccrualOrderIsNotRegistered):
 			return fmt.Errorf(
 				"order %q is not registered in accrual: %w", order.ID, err)
-		case errors.As(err, &delay):
-			ticker.Reset(delay.Period)
-			f.logger.Infof("ticker reset to %v", delay.Period)
-			return nil
 		case err != nil:
 			return fmt.Errorf("unexpected error from accrual: %w", err)
 		}
