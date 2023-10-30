@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -17,8 +16,6 @@ func TestLogin(t *testing.T) {
 	var dummyLogger DummyLogger
 
 	ctx := context.Background()
-
-	someError := errors.New("some error")
 
 	tests := []struct {
 		name           string
