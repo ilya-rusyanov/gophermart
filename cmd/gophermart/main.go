@@ -63,9 +63,7 @@ func main() {
 
 	feedAccrual := usecases.NewFeedAccrual(
 		logger, accrualStorage, accrualAdapter)
-	accrualErrorsCh := feedAccrual.Run(context, 1*time.Second)
-
-	go printErrors(context, logger, accrualErrorsCh)
+	go feedAccrual.Run(context, 1*time.Second)
 
 	withdrawUsecase := usecases.NewWithdraw(withdrawalStorage)
 

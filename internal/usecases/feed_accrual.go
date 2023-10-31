@@ -38,37 +38,29 @@ func NewFeedAccrual(
 	}
 }
 
-func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) <-chan error {
-	errCh := make(chan error, 1)
-
+func (f *FeedAccrual) Run(ctx context.Context, basePeriod time.Duration) {
 	ticker := time.NewTicker(basePeriod)
 
-	go func() {
-		defer ticker.Stop()
-		defer close(errCh)
+	defer ticker.Stop()
 
-		for {
-		selectLoop:
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				err := f.reviseOrders(ctx)
-				var delay *entities.AccrualTooManyRequestsError
-				switch {
-				case errors.As(err, &delay):
-					ticker.Reset(delay.Period)
-					f.logger.Infof("ticker reset to %v", delay.Period)
-					break selectLoop
-				case err != nil:
-					errCh <- err
-				}
-				ticker.Reset(basePeriod)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			err := f.reviseOrders(ctx)
+			var delay *entities.AccrualTooManyRequestsError
+			if errors.As(err, &delay) {
+				ticker.Reset(delay.Period)
+				f.logger.Infof("ticker reset to %v", delay.Period)
+				break
+			} else if err != nil {
+				f.logger.Error(err)
 			}
-		}
-	}()
 
-	return errCh
+			ticker.Reset(basePeriod)
+		}
+	}
 }
 
 func (f *FeedAccrual) reviseOrders(ctx context.Context) error {

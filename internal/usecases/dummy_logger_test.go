@@ -3,6 +3,9 @@ package usecases
 type DummyLogger struct {
 }
 
+func (l *DummyLogger) Error(...any) {
+}
+
 func (l *DummyLogger) Errorf(string, ...any) {
 }
 
